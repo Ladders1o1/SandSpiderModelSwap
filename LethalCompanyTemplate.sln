@@ -1,16 +1,81 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LethalCompanyTemplate", "LethalCompanyTemplate\LethalCompanyTemplate.csproj", "{2DC60A9D-F44B-4B06-8A37-9B05D6D2CAC8}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2DC60A9D-F44B-4B06-8A37-9B05D6D2CAC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2DC60A9D-F44B-4B06-8A37-9B05D6D2CAC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2DC60A9D-F44B-4B06-8A37-9B05D6D2CAC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2DC60A9D-F44B-4B06-8A37-9B05D6D2CAC8}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-EndGlobal
+using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
+using System.Security;
+using System.Security.Permissions;
+using BepInEx;
+using HarmonyLib;
+using UnityEngine;
+using LC_API.BundleAPI;
+using UnityEngine.Video;
+using static UnityEngine.UIElements.UIR.Implementation.UIRStylePainter;
+
+namespace LethalCompanyTemplateEren
+{
+    [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    public class Plugin : BaseUnityPlugin
+    {
+        public Harmony harmonymain;
+
+        private void Awake()
+        {
+            //IL_0007: Unknown result type (might be due to invalid IL or missing references)
+            //IL_0011: Expected O, but got Unknown
+            harmonymain = new Harmony("ErenSpiders");
+            harmonymain.PatchAll();
+            // Plugin startup logic
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+    }
+    public static class PluginInfo
+    {
+        public const string PLUGIN_GUID = "ErenSpiders";
+
+        public const string PLUGIN_NAME = "ErenSpiders";
+
+        public const string PLUGIN_VERSION = "1.0.0";
+    }
+}
+
+namespace Eren.Patches
+{
+    [HarmonyPatch]
+    internal class EnemyTypes
+    {
+        [HarmonyPatch(typeof(SandSpiderAI), "Start")]
+        [HarmonyPostfix]
+        public static void SummonEren(SandSpiderAI __instance)
+        {
+            try
+            {
+                //IL_009c: Unknown result type (might be due to invalid IL or missing references)
+                UnityEngine.Object.Destroy((UnityEngine.Object)(object)((Component)((Component)__instance).gameObject.transform.Find("MeshContainer").Find("MeshRenderer")).gameObject.GetComponent<SkinnedMeshRenderer>());
+                UnityEngine.Object.Destroy((UnityEngine.Object)(object)((Component)((Component)__instance).gameObject.transform.Find("MeshContainer").Find("AnimContainer").Find("Armature").Find("Head").Find("RightFang")).gameObject.GetComponent<MeshRenderer>());
+                UnityEngine.Object.Destroy((UnityEngine.Object)(object)((Component)((Component)__instance).gameObject.transform.Find("MeshContainer").Find("AnimContainer").Find("Armature").Find("Head").Find("RightFang")).gameObject.GetComponent<MeshFilter>());
+                UnityEngine.Object.Destroy((UnityEngine.Object)(object)((Component)((Component)__instance).gameObject.transform.Find("MeshContainer").Find("AnimContainer").Find("Armature").Find("Head").Find("LeftFang")).gameObject.GetComponent<MeshRenderer>());
+                UnityEngine.Object.Destroy((UnityEngine.Object)(object)((Component)((Component)__instance).gameObject.transform.Find("MeshContainer").Find("AnimContainer").Find("Armature").Find("Head").Find("LeftFang")).gameObject.GetComponent<MeshFilter>());
+
+                GameObject erenPrefab = BundleLoader.GetLoadedAsset<GameObject>("Assets/AssetBundlesWanted/Eren.obj");
+                if (erenPrefab == null)
+                {
+                    UnityEngine.Debug.LogError("Eren prefab not loaded!");
+                    return;
+                }
+
+                GameObject val = UnityEngine.Object.Instantiate<GameObject>(BundleLoader.GetLoadedAsset<GameObject>("assets/assetbundleswanted/eren.obj"), ((Component)__instance).gameObject.transform);
+                UnityEngine.Debug.Log("SPAWNED EREN AEAEAEE");
+                val.transform.SetParent(__instance.transform, false);
+                val.transform.localPosition = new Vector3(0f, 2.2f, 0f);
+
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError($"Exception: {e}");
+            }
+
+        }
+    }
+}
+
